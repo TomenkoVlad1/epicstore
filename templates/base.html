@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Крамниця{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<aside class="sidebar">
+    <a href="{% url 'catalog:product_list' %}" class="logo">EPIC<br><span>STORE</span></a>
+
+    <nav class="menu">
+        <a href="{% url 'catalog:product_list' %}" class="menu-item active">🛍 Крамниця</a>
+        <a href="#" class="menu-item">📚 Бібліотека</a>
+    </nav>
+</aside>
+
+<div class="main">
+    <header class="topbar">
+        <form action="{% url 'catalog:product_list' %}" method="get" class="search">
+            <input type="text" name="q" placeholder="Шукати в крамниці" value="{{ query|default:'' }}">
+        </form>
+
+        <div class="top-links">
+            <a href="{% url 'catalog:product_list' %}">Цікавинки</a>
+            <a href="{% url 'catalog:product_list' %}">Всеогляд</a>
+            <a href="#">Новини</a>
+        </div>
+
+        <div class="top-right">
+            <a href="#" class="icon">🛒</a>
+            <a href="{% url 'admin:index' %}" class="avatar">A</a>
+        </div>
+    </header>
+
+    <main class="content">
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+</body>
+</html>

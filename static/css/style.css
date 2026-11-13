@@ -1,0 +1,309 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #101014;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    display: flex;
+    min-height: 100vh;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* ---- бокове меню ---- */
+.sidebar {
+    width: 260px;
+    padding: 30px 14px;
+    flex-shrink: 0;
+}
+
+.logo {
+    display: block;
+    width: 50px;
+    margin: 0 auto 50px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 15px;
+    line-height: 1;
+    border: 2px solid #fff;
+    border-radius: 4px;
+    padding: 8px 2px;
+}
+
+.logo span {
+    font-size: 8px;
+}
+
+.menu-item {
+    display: block;
+    padding: 18px 20px;
+    border-radius: 10px;
+    color: #aaa;
+    margin-bottom: 6px;
+}
+
+.menu-item:hover,
+.menu-item.active {
+    background: #202024;
+    color: #fff;
+}
+
+/* ---- верхня панель ---- */
+.main {
+    flex: 1;
+    padding: 0 50px 40px 30px;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding: 30px 0;
+}
+
+.search input {
+    width: 290px;
+    padding: 14px 20px;
+    border-radius: 30px;
+    border: none;
+    background: #202024;
+    color: #fff;
+    font-size: 15px;
+}
+
+.top-links a {
+    margin-right: 25px;
+    color: #aaa;
+}
+
+.top-links a:hover {
+    color: #fff;
+}
+
+.top-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.icon {
+    font-size: 22px;
+}
+
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3ddc97, #2bb0ed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* ---- каталог ---- */
+.page-title {
+    font-size: 48px;
+    margin: 10px 0 30px;
+}
+
+.categories {
+    margin-bottom: 30px;
+}
+
+.cat {
+    display: inline-block;
+    padding: 8px 18px;
+    margin: 0 8px 8px 0;
+    border-radius: 20px;
+    background: #202024;
+    color: #aaa;
+}
+
+.cat.active,
+.cat:hover {
+    background: #fff;
+    color: #000;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.card:hover .card-img {
+    opacity: 0.8;
+}
+
+.card-img {
+    aspect-ratio: 3 / 4;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #202024;
+    margin-bottom: 12px;
+}
+
+.card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.no-img {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+}
+
+.no-img.big {
+    height: 400px;
+}
+
+.card-title {
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 6px;
+}
+
+.card-price {
+    color: #ccc;
+}
+
+.badge {
+    background: #26bbff;
+    color: #000;
+    font-size: 12px;
+    padding: 3px 7px;
+    border-radius: 4px;
+    margin-right: 5px;
+}
+
+.old-price {
+    text-decoration: line-through;
+    color: #777;
+    margin-right: 5px;
+}
+
+.muted {
+    color: #888;
+    margin-bottom: 20px;
+}
+
+/* ---- сторінка гри ---- */
+.back {
+    color: #aaa;
+}
+
+.detail {
+    display: flex;
+    gap: 50px;
+}
+
+.detail-left {
+    flex: 1;
+}
+
+.main-image img {
+    width: 100%;
+    border-radius: 8px;
+}
+
+.thumbs {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0 30px;
+    overflow-x: auto;
+}
+
+.thumbs img {
+    width: 120px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0.6;
+}
+
+.thumbs img:hover {
+    opacity: 1;
+}
+
+.description {
+    color: #ccc;
+    line-height: 1.6;
+}
+
+.detail-right {
+    width: 320px;
+    flex-shrink: 0;
+}
+
+.side-cover {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.price-block {
+    margin-bottom: 20px;
+}
+
+.price {
+    font-size: 20px;
+}
+
+.btn-buy,
+.btn-cart {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.btn-buy {
+    background: #26bbff;
+    color: #000;
+}
+
+.btn-buy:hover {
+    background: #61cdff;
+}
+
+.btn-cart {
+    background: #202024;
+    color: #fff;
+    border: 1px solid #444;
+}
+
+.info {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+.info td {
+    padding: 12px 0;
+    border-bottom: 1px solid #2a2a2e;
+    color: #aaa;
+}
+
+.info td:last-child {
+    text-align: right;
+    color: #fff;
+}

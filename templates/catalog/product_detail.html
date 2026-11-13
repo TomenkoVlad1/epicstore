@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.title }}{% endblock %}
+
+{% block content %}
+<a href="{% url 'catalog:product_list' %}" class="back">‹ Назад</a>
+
+<h1 class="page-title">{{ product.title }}</h1>
+
+<div class="detail">
+    <div class="detail-left">
+        <div class="main-image">
+            {% if images %}
+                <img src="{{ images.0.image.url }}" alt="{{ product.title }}" id="mainImg">
+            {% elif product.cover %}
+                <img src="{{ product.cover.url }}" alt="{{ product.title }}" id="mainImg">
+            {% else %}
+                <div class="no-img big">Немає фото</div>
+            {% endif %}
+        </div>
+
+        {% if images %}
+        <div class="thumbs">
+            {% for img in images %}
+                <img src="{{ img.image.url }}" alt="" onclick="document.getElementById('mainImg').src=this.src">
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="description">
+            {{ product.description|linebreaks }}
+        </div>
+    </div>
+
+    <div class="detail-right">
+        {% if product.cover %}
+            <img src="{{ product.cover.url }}" alt="" class="side-cover">
+        {% endif %}
+
+        <div class="price-block">
+            {% if product.is_free %}
+                <span class="price">Безкоштовно</span>
+            {% elif product.has_discount %}
+                <span class="badge">-{{ product.discount_percent }}%</span>
+                <span class="old-price">{{ product.price }} USD</span>
+                <span class="price">{{ product.discount_price }} USD</span>
+            {% else %}
+                <span class="price">{{ product.price }} USD</span>
+            {% endif %}
+        </div>
+
+        <!-- кошик буде на наступному етапі -->
+        <button class="btn-buy">Придбати</button>
+        <button class="btn-cart">До кошика</button>
+
+        <table class="info">
+            {% if product.category %}
+            <tr><td>Категорія</td><td>{{ product.category.name }}</td></tr>
+            {% endif %}
+            {% if product.developer %}
+            <tr><td>Розробник</td><td>{{ product.developer }}</td></tr>
+            {% endif %}
+            {% if product.publisher %}
+            <tr><td>Видавець</td><td>{{ product.publisher }}</td></tr>
+            {% endif %}
+            {% if product.release_date %}
+            <tr><td>Дата виходу</td><td>{{ product.release_date|date:"d.m.Y" }}</td></tr>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}

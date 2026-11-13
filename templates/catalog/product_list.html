@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Крамниця{% endblock %}
+
+{% block content %}
+<h1 class="page-title">
+    {% if current_category %}{{ current_category.name }}{% else %}Усі ігри{% endif %}
+</h1>
+
+<div class="categories">
+    <a href="{% url 'catalog:product_list' %}" class="cat {% if not current_category %}active{% endif %}">Усі</a>
+    {% for cat in categories %}
+        <a href="?category={{ cat.slug }}" class="cat {% if current_category == cat %}active{% endif %}">{{ cat.name }}</a>
+    {% endfor %}
+</div>
+
+{% if query %}
+    <p class="muted">Результати пошуку: "{{ query }}"</p>
+{% endif %}
+
+<div class="grid">
+    {% for product in products %}
+        <a href="{{ product.get_absolute_url }}" class="card">
+            <div class="card-img">
+                {% if product.cover %}
+                    <img src="{{ product.cover.url }}" alt="{{ product.title }}">
+                {% else %}
+                    <div class="no-img">Немає фото</div>
+                {% endif %}
+            </div>
+            <div class="card-title">{{ product.title }}</div>
+            <div class="card-price">
+                {% if product.is_free %}
+                    Безкоштовно
+                {% elif product.has_discount %}
+                    <span class="badge">-{{ product.discount_percent }}%</span>
+                    <span class="old-price">{{ product.price }} USD</span>
+                    {{ product.discount_price }} USD
+                {% else %}
+                    {{ product.price }} USD
+                {% endif %}
+            </div>
+        </a>
+    {% empty %}
+        <p class="muted">Ігор поки немає 😢</p>
+    {% endfor %}
+</div>
+
+<p class="muted">Показано {{ products|length }}</p>
+{% endblock %}
