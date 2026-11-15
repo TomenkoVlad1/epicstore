@@ -5,6 +5,8 @@ from django.urls import reverse
 class Category(models.Model):
     name = models.CharField('Назва', max_length=100)
     slug = models.SlugField(unique=True)
+    # квадратна картинка з емблемою жанру (генерує seed_games)
+    image = models.ImageField('Картинка', upload_to='categories/', blank=True)
 
     class Meta:
         verbose_name = 'Категорія'

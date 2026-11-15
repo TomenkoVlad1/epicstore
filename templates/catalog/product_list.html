@@ -21,6 +21,19 @@
 
 <div class="catalog">
     <div class="catalog-main">
+        <!-- швидкий вибір жанру; інші фільтри (пошук, ціна...) зберігаються -->
+        <nav class="categories">
+            <a href="?{% for key, value in request.GET.items %}{% if key != 'category' %}{{ key|urlencode }}={{ value|urlencode }}&amp;{% endif %}{% endfor %}"
+               class="cat {% if not current_category %}active{% endif %}">Усі</a>
+            {% for cat in categories %}
+                <a href="?{% for key, value in request.GET.items %}{% if key != 'category' %}{{ key|urlencode }}={{ value|urlencode }}&amp;{% endif %}{% endfor %}category={{ cat.slug }}"
+                   class="cat {% if current_category == cat %}active{% endif %}">
+                    {% if cat.image %}<img src="{{ cat.image.url }}" alt="" class="cat-icon">{% endif %}
+                    {{ cat.name }}
+                </a>
+            {% endfor %}
+        </nav>
+
         <div class="grid">
             {% for product in products %}
                 {% include 'catalog/_card.html' %}

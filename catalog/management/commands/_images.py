@@ -3,6 +3,7 @@
 Файл починається з _ тому Django не вважає його командою.
 """
 import hashlib
+import math
 import random
 from io import BytesIO
 
@@ -191,3 +192,132 @@ def make_news_image(title):
         draw.text((70, y), line, font=font, fill=(255, 255, 255))
         y += font.size + 12
     return to_bytes(img)
+
+
+# ---------------- емблеми жанрів ----------------
+
+def _emblem_shapes(draw, cx, cy, s, kind, fill):
+    """Малює емблему жанру лініями. s - половина розміру емблеми."""
+    w = max(2, int(s * 0.09))  # товщина лінії
+
+    def p(x, y):
+        # координати в долях від s, відносно центру
+        return (cx + x * s, cy + y * s)
+
+    if kind == 'action':  # блискавка
+        draw.polygon([p(0.15, -1), p(-0.55, 0.12), p(-0.05, 0.12), p(-0.2, 1),
+                      p(0.55, -0.18), p(0.05, -0.18), p(0.3, -1)], fill=fill)
+    elif kind == 'adventure':  # компас
+        draw.ellipse([p(-0.95, -0.95), p(0.95, 0.95)], outline=fill, width=w)
+        draw.polygon([p(0, -0.75), p(0.2, 0), p(0, 0.75), p(-0.2, 0)], fill=fill)
+        draw.ellipse([p(-0.08, -0.08), p(0.08, 0.08)], fill=0)  # дірка в масці
+    elif kind == 'rpg':  # меч
+        draw.polygon([p(0, -1), p(0.13, -0.8), p(0.13, 0.35), p(-0.13, 0.35), p(-0.13, -0.8)], fill=fill)
+        draw.rounded_rectangle([p(-0.5, 0.35), p(0.5, 0.5)], radius=int(s * 0.05), fill=fill)
+        draw.rectangle([p(-0.07, 0.5), p(0.07, 0.85)], fill=fill)
+        draw.ellipse([p(-0.14, 0.82), p(0.14, 1.0)], fill=fill)
+    elif kind == 'shooter':  # приціл
+        draw.ellipse([p(-0.75, -0.75), p(0.75, 0.75)], outline=fill, width=w)
+        for a, b in [((0, -1), (0, -0.3)), ((0, 0.3), (0, 1)), ((-1, 0), (-0.3, 0)), ((0.3, 0), (1, 0))]:
+            draw.line([p(*a), p(*b)], fill=fill, width=w)
+        draw.ellipse([p(-0.1, -0.1), p(0.1, 0.1)], fill=fill)
+    elif kind == 'racing':  # фінішний прапор
+        draw.line([p(-0.8, -0.9), p(-0.8, 1)], fill=fill, width=w)
+        cell = 0.3
+        for row in range(4):
+            for col in range(5):
+                if (row + col) % 2 == 0:
+                    x, y = -0.8 + col * cell, -0.9 + row * cell
+                    draw.rectangle([p(x, y), p(x + cell, y + cell)], fill=fill)
+        draw.rectangle([p(-0.8, -0.9), p(0.7, 0.3)], outline=fill, width=max(1, w // 2))
+    elif kind == 'indie':  # геймпад
+        draw.rounded_rectangle([p(-1, -0.5), p(1, 0.55)], radius=int(s * 0.45), outline=fill, width=w)
+        draw.rectangle([p(-0.62, -0.06), p(-0.22, 0.08)], fill=fill)
+        draw.rectangle([p(-0.49, -0.2), p(-0.35, 0.22)], fill=fill)
+        for bx, by in [(0.38, -0.12), (0.6, 0.1)]:
+            draw.ellipse([p(bx - 0.1, by - 0.1), p(bx + 0.1, by + 0.1)], fill=fill)
+    elif kind == 'battle-royale':  # корона
+        draw.polygon([p(-0.9, 0.5), p(-0.9, -0.5), p(-0.45, 0), p(0, -0.75),
+                      p(0.45, 0), p(0.9, -0.5), p(0.9, 0.5)], fill=fill)
+        draw.rectangle([p(-0.9, 0.62), p(0.9, 0.8)], fill=fill)
+        for x, y in [(-0.9, -0.5), (0, -0.75), (0.9, -0.5)]:
+            draw.ellipse([p(x - 0.1, y - 0.1), p(x + 0.1, y + 0.1)], fill=fill)
+    elif kind == 'simulator':  # шестерня
+        for i in range(8):
+            a = math.pi / 4 * i
+            draw.line([p(math.cos(a) * 0.45, math.sin(a) * 0.45), p(math.cos(a) * 0.95, math.sin(a) * 0.95)],
+                      fill=fill, width=int(s * 0.28))
+        draw.ellipse([p(-0.72, -0.72), p(0.72, 0.72)], fill=fill)
+        draw.ellipse([p(-0.28, -0.28), p(0.28, 0.28)], fill=0)  # дірка в масці
+    elif kind == 'strategy':  # шахова тура
+        draw.polygon([p(-0.6, -0.9), p(-0.36, -0.9), p(-0.36, -0.7), p(-0.12, -0.7), p(-0.12, -0.9),
+                      p(0.12, -0.9), p(0.12, -0.7), p(0.36, -0.7), p(0.36, -0.9), p(0.6, -0.9),
+                      p(0.6, -0.45), p(0.4, -0.35), p(0.4, 0.55), p(0.65, 0.7), p(0.65, 0.95),
+                      p(-0.65, 0.95), p(-0.65, 0.7), p(-0.4, 0.55), p(-0.4, -0.35), p(-0.6, -0.45)], fill=fill)
+    elif kind == 'horror':  # привид
+        draw.pieslice([p(-0.7, -0.95), p(0.7, 0.45)], 180, 360, fill=fill)
+        draw.polygon([p(-0.7, -0.26), p(0.7, -0.26), p(0.7, 0.95), p(0.35, 0.65),
+                      p(0, 0.95), p(-0.35, 0.65), p(-0.7, 0.95)], fill=fill)
+        for ex in (-0.28, 0.28):
+            draw.ellipse([p(ex - 0.13, -0.38), p(ex + 0.13, -0.08)], fill=0)  # дірка в масці
+    else:  # невідомий жанр - ромб
+        draw.polygon([p(0, -0.9), p(0.7, 0), p(0, 0.9), p(-0.7, 0)], outline=fill, width=w)
+
+
+def draw_emblem(img, cx, cy, size, kind):
+    """
+    Малює на img (RGB) емблему жанру kind (= slug категорії) з центром (cx, cy).
+    Біла емблема з м'яким світінням навколо. Змінює img на місці.
+    """
+    s = size / 2
+    # маска емблеми: білим по чорному (чорні деталі - "дірки")
+    mask = Image.new('L', img.size, 0)
+    _emblem_shapes(ImageDraw.Draw(mask), cx, cy, s, kind, 255)
+
+    glow = mask.filter(ImageFilter.GaussianBlur(max(4, size // 12)))
+    img.paste(Image.new('RGB', img.size, (255, 255, 255)), (0, 0), glow.point(lambda v: v * 0.6))
+    img.paste(Image.new('RGB', img.size, (255, 255, 255)), (0, 0), mask)
+    return img
+
+
+def make_category_image(slug):
+    """Квадратна картинка категорії 400x400: темний градієнт + емблема жанру."""
+    w = h = 400
+    (top, bottom), rnd = colors_for('category-' + slug)
+    img = gradient(w, h, top, bottom, rnd)
+    # затемнення по краях, щоб емблема "світилась" у центрі
+    vignette = Image.new('L', (w, h), 0)
+    ImageDraw.Draw(vignette).ellipse([-80, -80, w + 80, h + 80], fill=0, outline=160, width=120)
+    vignette = vignette.filter(ImageFilter.GaussianBlur(60))
+    img = Image.composite(Image.new('RGB', (w, h), (0, 0, 0)), img, vignette)
+    draw_emblem(img, w // 2, h // 2, 190, slug)
+    return to_bytes(img, quality=88)
+
+
+# ---------------- збереження згенерованих файлів ----------------
+# Згенеровані картинки (і обкладинки з RAWG) завжди лежать як <папка>/<slug>.jpg.
+# Все, що має інше ім'я - завантажено вручну через адмінку, і його не чіпаємо.
+
+def generated_name(field_file, filename):
+    """Повне ім'я файлу, наприклад covers/fortnite.jpg."""
+    return f'{field_file.field.upload_to}{filename}'
+
+
+def is_generated(field_file, filename):
+    """True, якщо поле порожнє або в ньому наш згенерований файл."""
+    return not field_file or field_file.name == generated_name(field_file, filename)
+
+
+def save_generated(field_file, filename, data):
+    """
+    Записує data у <upload_to>/<filename>, перезаписуючи старий файл з тим самим ім'ям.
+    Звичайний field.save() додав би до імені випадковий суфікс (fortnite_Ab12Cd.jpg),
+    і потім ми б не впізнали свій файл. Модель не зберігає - треба викликати save() самому.
+    """
+    from django.core.files.base import ContentFile
+    from django.core.files.storage import FileSystemStorage, default_storage
+
+    storage = FileSystemStorage(
+        location=default_storage.location, base_url=default_storage.base_url, allow_overwrite=True,
+    )
+    field_file.name = storage.save(generated_name(field_file, filename), ContentFile(data))

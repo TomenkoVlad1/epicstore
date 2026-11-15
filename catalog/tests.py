@@ -1,11 +1,22 @@
+import json
+import os
+import shutil
+import tempfile
 from decimal import Decimal
+from io import BytesIO, StringIO
+from unittest.mock import patch
 
 from django.core.cache import cache
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.db import connection
 from django.test import TestCase, override_settings
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
+from PIL import Image
+
+from .management.commands.fetch_covers import pick_best_match
 from .models import Category, Product
 
 LOCMEM_CACHE = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache', 'LOCATION': 'catalog-tests'}}
@@ -120,3 +131,84 @@ class CatalogCacheTests(TestCase):
         # другий раз ігри беруться з кешу - запитів до таблиці ігор нема
         with self.assertNumQueries(0):
             self.client.get(reverse('catalog:home'))
+
+
+class HomeGenresTests(TestCase):
+    def test_genre_block_on_home(self):
+        action = Category.objects.create(name='Екшн', slug='action', image='categories/action.jpg')
+        Category.objects.create(name='Порожня', slug='empty')  # без ігор - не показуємо
+        make_product('Game', 'game', category=action)
+        response = self.client.get(reverse('catalog:home'))
+        self.assertContains(response, 'Обрати за жанром')
+        self.assertContains(response, '/browse/?category=action')
+        self.assertContains(response, 'categories/action.jpg')
+        self.assertNotContains(response, 'category=empty')
+
+
+def fake_jpeg(size=(800, 450)):
+    buf = BytesIO()
+    Image.new('RGB', size, (200, 30, 30)).save(buf, format='JPEG')
+    return buf.getvalue()
+
+
+class FetchCoversTests(TestCase):
+    """Без справжніх запитів в інтернет: urlopen підмінений."""
+
+    def setUp(self):
+        self.media = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.media, ignore_errors=True)
+
+    def test_without_key_gives_clear_error(self):
+        with patch.dict(os.environ):
+            os.environ.pop('RAWG_API_KEY', None)
+            with self.assertRaisesMessage(CommandError, 'RAWG_API_KEY'):
+                call_command('fetch_covers', stdout=StringIO())
+
+    def test_pick_best_match(self):
+        results = [
+            {'id': 1, 'name': 'God of War I', 'added': 2000, 'background_image': 'https://x/1.jpg'},
+            {'id': 2, 'name': 'Hades', 'added': 3, 'background_image': 'https://x/2.jpg'},  # дублікат
+            {'id': 3, 'name': 'HADES', 'added': 9000, 'background_image': 'https://x/3.jpg'},
+            {'id': 4, 'name': 'Hades', 'added': 99999, 'background_image': None},  # без картинки
+        ]
+        self.assertEqual(pick_best_match('Hades', results)['id'], 3)
+        self.assertIsNone(pick_best_match('Cyberpunk 2077', results))
+
+    def test_command_parses_rawg_response(self):
+        game = make_product('Hades', 'hades')
+        # обкладинка, завантажена вручну через адмінку - її не можна чіпати
+        own = make_product('Celeste', 'celeste', cover='covers/my_upload.png')
+
+        search = {'results': [
+            {'id': 10, 'name': 'Hades II', 'added': 500, 'background_image': 'https://media.test/h2.jpg'},
+            {'id': 11, 'name': 'Hades', 'added': 9000, 'background_image': 'https://media.test/hades.jpg'},
+        ]}
+        shots = {'results': [{'image': f'https://media.test/s{i}.jpg'} for i in range(6)]}
+        requested = []
+
+        def fake_urlopen(request, timeout):
+            url = request.full_url
+            requested.append(url)
+            self.assertEqual(timeout, 15)
+            if url.startswith('https://api.rawg.io/api/games?'):
+                return BytesIO(json.dumps(search).encode())
+            if url.startswith('https://api.rawg.io/api/games/11/screenshots?'):
+                return BytesIO(json.dumps(shots).encode())
+            self.assertNotIn('secret-key', url)  # ключ не йде на сервер картинок
+            return BytesIO(fake_jpeg())
+
+        out = StringIO()
+        with self.settings(MEDIA_ROOT=self.media),                 patch.dict(os.environ, {'RAWG_API_KEY': 'secret-key'}),                 patch('catalog.management.commands.fetch_covers.urlopen', side_effect=fake_urlopen),                 patch('catalog.management.commands.fetch_covers.time.sleep'):
+            call_command('fetch_covers', 'hades', 'celeste', stdout=out)
+
+            game.refresh_from_db()
+            self.assertEqual(game.cover.name, 'covers/hades.jpg')
+            self.assertEqual(Image.open(game.cover.path).size, (600, 800))
+            self.assertEqual(game.banner.name, 'banners/hades.jpg')
+            self.assertEqual(Image.open(game.banner.path).size, (1600, 900))
+            self.assertEqual(game.images.count(), 4)  # максимум 4 скріншоти
+
+        own.refresh_from_db()
+        self.assertEqual(own.cover.name, 'covers/my_upload.png')
+        self.assertIn('https://media.test/hades.jpg', requested)
+        self.assertNotIn('secret-key', out.getvalue())

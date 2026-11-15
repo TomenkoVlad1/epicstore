@@ -105,6 +105,24 @@
     </div>
 </div>
 
+{% if categories %}
+<div class="section-head">
+    <h3>Обрати за жанром</h3>
+    <a href="{% url 'catalog:product_list' %}" class="link">Усі ігри {% icon 'arrow-right' 16 %}</a>
+</div>
+<div class="genre-grid">
+    {% for cat in categories %}
+        <a href="{% url 'catalog:product_list' %}?category={{ cat.slug }}" class="genre-card">
+            <div class="genre-img">
+                {% if cat.image %}<img src="{{ cat.image.url }}" alt="" loading="lazy">{% endif %}
+            </div>
+            <div class="genre-name">{{ cat.name }}</div>
+            <div class="genre-count">{{ cat.product_count }} ігор</div>
+        </a>
+    {% endfor %}
+</div>
+{% endif %}
+
 {% if latest_news %}
 <div class="section-head">
     <h3>Новини</h3>

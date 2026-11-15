@@ -64,6 +64,8 @@ def get_home_data():
             'free_games': list(products.filter(price=0)[:5]),
             'new_releases': list(products.exclude(release_date=None).order_by('-release_date')[:5]),
             'latest_news': list(News.objects.filter(is_published=True).select_related('product')[:3]),
+            # блок "Обрати за жанром" - тільки категорії, в яких є ігри
+            'categories': [c for c in get_categories() if c.product_count],
         }
         cache.set(key, data, TIMEOUT)
     return data
