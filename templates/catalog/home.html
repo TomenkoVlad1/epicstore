@@ -12,7 +12,8 @@
         {% for product in featured %}
             <div class="hero-slide {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}">
                 {% if product.banner %}
-                    <img src="{{ product.banner.url }}" alt="" class="hero-bg">
+                    <img src="{{ product.banner.url }}" alt="" class="hero-bg"
+                         {% if product.cover %}data-fallback="{{ product.cover.url }}"{% endif %}>
                 {% elif product.cover %}
                     <img src="{{ product.cover.url }}" alt="" class="hero-bg">
                 {% endif %}
@@ -143,6 +144,16 @@
 
 {% block scripts %}
 <script>
+    // якщо файл банера не завантажився - показуємо обкладинку, а не чорний прямокутник
+    document.querySelectorAll('.hero-bg[data-fallback]').forEach(img => {
+        const useCover = () => { img.src = img.dataset.fallback; };
+        if (img.complete && img.naturalWidth === 0) {
+            useCover();
+        } else {
+            img.addEventListener('error', useCover, { once: true });
+        }
+    });
+
     // перемикання банера: клік по грі справа або автоматично кожні 6 секунд
     const slides = document.querySelectorAll('.hero-slide');
     const listItems = document.querySelectorAll('.hero-list-item');

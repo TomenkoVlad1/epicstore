@@ -125,6 +125,39 @@ class CatalogCacheTests(TestCase):
         self.assertContains(response, 'New Title')
         self.assertNotContains(response, 'Old Title')
 
+    def test_banner_has_cover_fallback(self):
+        make_product('Game', 'game', is_featured=True, banner='banners/game.jpg', cover='covers/game.jpg')
+        response = self.client.get(reverse('catalog:home'))
+        self.assertContains(response, 'src="/media/banners/game.jpg"')
+        self.assertContains(response, 'data-fallback="/media/covers/game.jpg"')
+
+    def test_fetch_covers_clears_home_cache(self):
+        from .cache import get_version
+        product = make_product('Hades', 'hades', is_featured=True)
+        self.client.get(reverse('catalog:home'))  # головна тепер у кеші
+        version = get_version()
+
+        search = {'results': [{'id': 1, 'name': 'Hades', 'added': 1, 'background_image': 'https://m.test/a.jpg'}]}
+
+        def fake_urlopen(request, timeout):
+            if '/screenshots' in request.full_url:
+                return BytesIO(b'{"results": []}')
+            if request.full_url.startswith('https://api.rawg.io/'):
+                return BytesIO(json.dumps(search).encode())
+            return BytesIO(fake_jpeg())
+
+        media = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, media, ignore_errors=True)
+        with self.settings(MEDIA_ROOT=media),                 patch.dict(os.environ, {'RAWG_API_KEY': 'k'}),                 patch('catalog.management.commands.fetch_covers.urlopen', side_effect=fake_urlopen),                 patch('catalog.management.commands.fetch_covers.time.sleep'):
+            call_command('fetch_covers', stdout=StringIO())
+
+        # сигнал post_save скинув кеш - головна покаже новий банер
+        self.assertGreater(get_version(), version)
+        response = self.client.get(reverse('catalog:home'))
+        self.assertContains(response, 'src="/media/banners/hades.jpg"')
+        product.refresh_from_db()
+        self.assertEqual(product.banner.name, 'banners/hades.jpg')
+
     def test_home_is_cached(self):
         make_product('Game', 'game')
         self.client.get(reverse('catalog:home'))
