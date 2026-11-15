@@ -9,4 +9,5 @@ media/*
 # секрети і зібрана статика
 .env
 staticfiles/
+.django_cache/
 data/

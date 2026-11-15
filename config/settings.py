@@ -123,7 +123,7 @@ DATABASES = {
 
 
 # ---------------- кеш ----------------
-# якщо задано REDIS_URL - кеш в Redis, інакше в пам'яті (зручно локально на Windows)
+# якщо задано REDIS_URL - кеш в Redis, інакше у файлах (зручно локально на Windows)
 REDIS_URL = os.environ.get('REDIS_URL')
 
 if TESTING:
@@ -138,9 +138,12 @@ elif REDIS_URL:
         }
     }
 else:
+    # кеш у файлах, а не LocMemCache: LocMemCache свій у кожного процесу, і тоді
+    # seed_games / fetch_covers скидали кеш тільки у себе, а runserver показував старе
     CACHES = {
         'default': {
-            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+            'LOCATION': BASE_DIR / '.django_cache',
             'TIMEOUT': 60 * 15,
         }
     }
