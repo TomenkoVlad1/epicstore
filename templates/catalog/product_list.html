@@ -1,50 +1,71 @@
 {% extends 'base.html' %}
+{% load icons %}
 
-{% block title %}Крамниця{% endblock %}
+{% block title %}Всеогляд{% endblock %}
+
+{% block breadcrumbs %}
+    <a href="{% url 'catalog:home' %}">Крамниця</a>
+    <span>›</span> <a href="{% url 'catalog:product_list' %}">Всеогляд</a>
+    {% if current_category %}
+        <span>›</span> <span class="current">{{ current_category.name }}</span>
+    {% endif %}
+    {% if query %}
+        <span>›</span> <span class="current">Пошук: "{{ query }}"</span>
+    {% endif %}
+{% endblock %}
 
 {% block content %}
 <h1 class="page-title">
     {% if current_category %}{{ current_category.name }}{% else %}Усі ігри{% endif %}
 </h1>
 
-<div class="categories">
-    <a href="{% url 'catalog:product_list' %}" class="cat {% if not current_category %}active{% endif %}">Усі</a>
-    {% for cat in categories %}
-        <a href="?category={{ cat.slug }}" class="cat {% if current_category == cat %}active{% endif %}">{{ cat.name }}</a>
-    {% endfor %}
+<div class="catalog">
+    <div class="catalog-main">
+        <div class="grid">
+            {% for product in products %}
+                {% include 'catalog/_card.html' %}
+            {% empty %}
+                <p class="muted">Нічого не знайдено</p>
+            {% endfor %}
+        </div>
+
+        <p class="muted">Показано {{ products|length }}</p>
+    </div>
+
+    <!-- панель фільтрів справа, як в епіку -->
+    <form method="get" class="filters">
+        <div class="filters-title">Фільтри</div>
+
+        <input type="text" name="q" placeholder="Назва" value="{{ query }}">
+
+        <label>Сортувати</label>
+        <select name="sort">
+            {% for key, option in sort_options.items %}
+                <option value="{{ key }}" {% if key == sort %}selected{% endif %}>{{ option.0 }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Жанр</label>
+        <select name="category">
+            <option value="">Усі</option>
+            {% for cat in categories %}
+                <option value="{{ cat.slug }}" {% if current_category == cat %}selected{% endif %}>
+                    {{ cat.name }} ({{ cat.product_count }})
+                </option>
+            {% endfor %}
+        </select>
+
+        <label>Ціна, USD</label>
+        <div class="price-range">
+            <input type="number" name="min_price" placeholder="від" min="0" step="0.01" value="{{ min_price }}">
+            <input type="number" name="max_price" placeholder="до" min="0" step="0.01" value="{{ max_price }}">
+        </div>
+
+        <label class="check"><input type="checkbox" name="free" value="1" {% if free %}checked{% endif %}> Безкоштовні</label>
+        <label class="check"><input type="checkbox" name="discount" value="1" {% if discount %}checked{% endif %}> Зі знижкою</label>
+
+        <button type="submit" class="btn-buy">Застосувати</button>
+        <a href="{% url 'catalog:product_list' %}" class="reset">Скинути</a>
+    </form>
 </div>
-
-{% if query %}
-    <p class="muted">Результати пошуку: "{{ query }}"</p>
-{% endif %}
-
-<div class="grid">
-    {% for product in products %}
-        <a href="{{ product.get_absolute_url }}" class="card">
-            <div class="card-img">
-                {% if product.cover %}
-                    <img src="{{ product.cover.url }}" alt="{{ product.title }}">
-                {% else %}
-                    <div class="no-img">Немає фото</div>
-                {% endif %}
-            </div>
-            <div class="card-title">{{ product.title }}</div>
-            <div class="card-price">
-                {% if product.is_free %}
-                    Безкоштовно
-                {% elif product.has_discount %}
-                    <span class="badge">-{{ product.discount_percent }}%</span>
-                    <span class="old-price">{{ product.price }} USD</span>
-                    {{ product.discount_price }} USD
-                {% else %}
-                    {{ product.price }} USD
-                {% endif %}
-            </div>
-        </a>
-    {% empty %}
-        <p class="muted">Ігор поки немає 😢</p>
-    {% endfor %}
-</div>
-
-<p class="muted">Показано {{ products|length }}</p>
 {% endblock %}

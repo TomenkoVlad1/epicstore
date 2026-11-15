@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load icons %}
+
+{% block title %}Дякуємо за покупку{% endblock %}
+
+{% block content %}
+<!-- вікно "дякуємо" поверх затемненого фону -->
+<div class="modal-bg">
+    <div class="modal">
+        <div class="modal-icon">{% icon 'check' 34 %}</div>
+        <h2>Дякуємо за покупку!</h2>
+        <p class="muted">Ігри вже додано до вашої бібліотеки</p>
+
+        <div class="modal-games">
+            {% for product in products %}
+                <div class="modal-game">
+                    {% if product.cover %}<img src="{{ product.cover.url }}" alt="">{% else %}<div class="recent-noimg"></div>{% endif %}
+                    <span>{{ product.title }}</span>
+                </div>
+            {% endfor %}
+        </div>
+
+        <a href="{% url 'library:library' %}" class="btn-buy">Перейти до бібліотеки</a>
+        <a href="{% url 'catalog:home' %}" class="btn-cart">Продовжити покупки</a>
+    </div>
+</div>
+{% endblock %}

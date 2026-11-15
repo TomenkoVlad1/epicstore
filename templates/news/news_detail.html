@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ item.title }}{% endblock %}
+
+{% block breadcrumbs %}
+    <a href="{% url 'catalog:home' %}">Крамниця</a>
+    <span>›</span> <a href="{% url 'news:news_list' %}">Новини</a>
+    <span>›</span> <span class="current">{{ item.title|truncatechars:40 }}</span>
+{% endblock %}
+
+{% block content %}
+<article class="article">
+    <div class="muted">{{ item.created_at|date:"d.m.Y" }}</div>
+    <h1>{{ item.title }}</h1>
+
+    {% if item.image %}
+        <img src="{{ item.image.url }}" alt="" class="article-img">
+    {% endif %}
+
+    <div class="description">{{ item.text|linebreaks }}</div>
+
+    {% if item.product %}
+        <a href="{{ item.product.get_absolute_url }}" class="article-game">
+            {% if item.product.cover %}<img src="{{ item.product.cover.url }}" alt="">{% endif %}
+            <div>
+                <div class="muted">Гра з новини</div>
+                <div class="card-title">{{ item.product.title }}</div>
+            </div>
+        </a>
+    {% endif %}
+</article>
+
+{% if other_news %}
+<div class="section-head"><h3>Інші новини</h3></div>
+<div class="news-grid">
+    {% for item in other_news %}
+        {% include 'news/_news_card.html' %}
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load icons %}
+
+{% block title %}Чати{% endblock %}
+{% block topbar_nav %}{% endblock %}
+
+{% block breadcrumbs %}
+    <a href="{% url 'users:profile' %}">Профіль</a>
+    <span>›</span> <a href="{% url 'social:chats' %}">Чати</a>
+    {% block chat_crumb %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="chat-window">
+    <!-- ліва колонка зі списком чатів -->
+    <div class="chat-list">
+        <div class="chat-list-head">
+            <h2>Chats</h2>
+            <a href="{% url 'users:profile' %}" class="mini-btn" title="Друзі">{% icon 'users' %}</a>
+        </div>
+        <a href="{% url 'social:group_create' %}" class="social-btn">Створити групу</a>
+
+        {% if chat_groups %}
+            <div class="requests-title">Групи</div>
+            {% for g in chat_groups %}
+                <a href="{% url 'social:group_detail' g.id %}"
+                   class="chat-link {% if group and group.id == g.id %}active{% endif %}">
+                    <div class="mini-avatar group">{{ g.name|first|upper }}</div>
+                    <div>
+                        <div class="friend-name">{{ g.name }}</div>
+                        <div class="friend-status">{{ g.member_count }} учасн.</div>
+                    </div>
+                </a>
+            {% endfor %}
+        {% endif %}
+
+        <div class="requests-title">Друзі</div>
+        {% for f in chat_friends %}
+            <a href="{% url 'social:dm' f.user.username %}"
+               class="chat-link {% if other and other.id == f.user.id %}active{% endif %}">
+                <div class="mini-avatar">
+                    {% if f.user.profile.avatar %}<img src="{{ f.user.profile.avatar.url }}" alt="">{% else %}{{ f.user.username|first|upper }}{% endif %}
+                    <span class="dot {% if f.user.profile.is_online %}online{% endif %}"></span>
+                </div>
+                <div class="chat-link-text">
+                    <div class="friend-name">{{ f.user.username }}</div>
+                    <div class="friend-status">{% if f.user.profile.is_online %}Online{% else %}Offline{% endif %}</div>
+                </div>
+                {% if f.unread %}<span class="unread">{{ f.unread }}</span>{% endif %}
+            </a>
+        {% empty %}
+            <p class="muted">Додайте друзів у <a href="{% url 'users:profile' %}" class="link">профілі</a></p>
+        {% endfor %}
+    </div>
+
+    <!-- права частина -->
+    <div class="chat-main">
+        {% block chat_main %}
+            <div class="chat-empty">
+                <div class="chat-empty-icon">{% icon 'chat' 64 %}</div>
+                <p>Виберіть чат, щоб продовжити розмову</p>
+            </div>
+        {% endblock %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // прокручуємо повідомлення в самий низ
+    const box = document.querySelector('.chat-messages');
+    if (box) box.scrollTop = box.scrollHeight;
+</script>
+{% endblock %}

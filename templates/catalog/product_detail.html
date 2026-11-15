@@ -1,10 +1,19 @@
 {% extends 'base.html' %}
+{% load icons %}
 
 {% block title %}{{ product.title }}{% endblock %}
 
-{% block content %}
-<a href="{% url 'catalog:product_list' %}" class="back">‹ Назад</a>
+{% block breadcrumbs %}
+    <a href="{% url 'catalog:home' %}">Крамниця</a>
+    <span>›</span> <a href="{% url 'catalog:product_list' %}">Всеогляд</a>
+    {% if product.category %}
+        <span>›</span>
+        <a href="{% url 'catalog:product_list' %}?category={{ product.category.slug }}">{{ product.category.name }}</a>
+    {% endif %}
+    <span>›</span> <span class="current">{{ product.title }}</span>
+{% endblock %}
 
+{% block content %}
 <h1 class="page-title">{{ product.title }}</h1>
 
 <div class="detail">
@@ -49,9 +58,16 @@
             {% endif %}
         </div>
 
-        <!-- кошик буде на наступному етапі -->
-        <button class="btn-buy">Придбати</button>
-        <button class="btn-cart">До кошика</button>
+        {% if owned %}
+            <a href="{% url 'library:library' %}" class="btn-cart">{% icon 'check' 18 %} У бібліотеці</a>
+        {% elif in_cart %}
+            <a href="{% url 'cart:cart_detail' %}" class="btn-cart">У кошику — перейти</a>
+        {% else %}
+            <form action="{% url 'cart:cart_add' product.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn-buy">До кошика</button>
+            </form>
+        {% endif %}
 
         <table class="info">
             {% if product.category %}

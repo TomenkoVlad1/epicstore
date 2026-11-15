@@ -16,9 +16,10 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['title', 'category', 'price', 'discount_price', 'release_date', 'is_active']
-    list_filter = ['category', 'is_active', 'release_date', 'developer']
-    list_editable = ['price', 'discount_price', 'is_active']
+    list_select_related = ['category']
+    list_display = ['title', 'category', 'price', 'discount_price', 'release_date', 'is_featured', 'is_active']
+    list_filter = ['category', 'is_active', 'is_featured', 'release_date', 'developer']
+    list_editable = ['price', 'discount_price', 'is_featured', 'is_active']
     search_fields = ['title', 'developer', 'publisher']
     prepopulated_fields = {'slug': ('title',)}
     inlines = [ProductImageInline]

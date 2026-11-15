@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load icons %}
+
+{% block title %}Баланс{% endblock %}
+
+{% block breadcrumbs %}
+    <a href="{% url 'catalog:home' %}">Крамниця</a>
+    <span>›</span> <span class="current">Баланс облікового запису</span>
+{% endblock %}
+
+{% block content %}
+<div class="auth-box">
+    {% if success_amount %}
+        {# той самий блок, тільки замість форми - "Платіж успішний" #}
+        <div class="pay-success">
+            <div class="modal-icon">{% icon 'check' 34 %}</div>
+            <h1>Платіж успішний</h1>
+            <p class="muted">На ваш баланс зараховано</p>
+            <div class="big-balance">+{{ success_amount }} USD</div>
+            <div class="summary-row total">
+                <span>Поточний баланс</span><span>{{ user.profile.balance }} USD</span>
+            </div>
+
+            {% if back_to_cart %}
+                <a href="{% url 'cart:cart_detail' %}" class="btn-buy">Повернутись до кошика</a>
+            {% endif %}
+            <a href="{% url 'users:balance' %}" class="btn-cart">Поповнити ще</a>
+            <a href="{% url 'catalog:home' %}" class="reset">До крамниці</a>
+        </div>
+    {% else %}
+        <h1>Баланс</h1>
+        <div class="big-balance">{% icon 'wallet' 30 %} {{ user.profile.balance }} USD</div>
+
+        {% if need %}
+            <div class="message error">Для покупки не вистачає {{ need }} USD</div>
+        {% endif %}
+
+        <form method="post" id="topupForm">
+            {% csrf_token %}
+            {% if need %}<input type="hidden" name="back" value="cart">{% endif %}
+
+            <label>Швидко поповнити</label>
+            <div class="presets">
+                {% for p in presets %}
+                    <button type="button" class="preset" onclick="setAmount({{ p }})">+{{ p }} USD</button>
+                {% endfor %}
+            </div>
+
+            <label>{{ form.amount.label }}</label>
+            {{ form.amount }}
+            {% for error in form.amount.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+
+            <button type="submit" class="btn-buy">Поповнити</button>
+        </form>
+
+        <p class="muted small-note">Це навчальний проект, тому гроші не справжні.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function setAmount(value) {
+        const input = document.querySelector('#topupForm input[name=amount]');
+        if (input) input.value = value;
+    }
+</script>
+{% endblock %}

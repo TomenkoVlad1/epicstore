@@ -1,0 +1,18 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Помилка сервера</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="error-page">
+    {# без extends base.html - якщо зламалась база, ця сторінка все одно відкриється #}
+    <div class="empty">
+        <div class="empty-icon">500</div>
+        <h2>Щось пішло не так</h2>
+        <p class="muted">Ми вже знаємо про проблему. Спробуйте пізніше.</p>
+        <a href="/" class="btn-buy small">На головну</a>
+    </div>
+</body>
+</html>

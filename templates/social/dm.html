@@ -1,0 +1,64 @@
+{% extends 'social/chat_base.html' %}
+{% load icons %}
+
+{% block title %}Чат з {{ other.username }}{% endblock %}
+{% block chat_crumb %}<span>›</span> <span class="current">{{ other.username }}</span>{% endblock %}
+
+{% block chat_main %}
+<div class="chat-header">
+    <div class="mini-avatar">
+        {% if other.profile.avatar %}<img src="{{ other.profile.avatar.url }}" alt="">{% else %}{{ other.username|first|upper }}{% endif %}
+        <span class="dot {% if other.profile.is_online %}online{% endif %}"></span>
+    </div>
+    <div>
+        <div class="friend-name">{{ other.username }}</div>
+        <div class="friend-status">{% if other.profile.is_online %}Online{% else %}Offline{% endif %}</div>
+    </div>
+</div>
+
+<div class="chat-messages">
+    <p class="chat-start">Це початок вашого чату з {{ other.username }}</p>
+
+    {% for entry in timeline %}
+        {% if entry.type == 'msg' %}
+            <div class="msg {% if entry.obj.sender == user %}mine{% endif %}">
+                <div class="msg-text">{{ entry.obj.text|linebreaksbr }}</div>
+                <div class="msg-time">{{ entry.obj.created_at|date:"d.m H:i" }}</div>
+            </div>
+        {% else %}
+            {# запрошення в групу прямо в лс #}
+            {% with inv=entry.obj %}
+            <div class="invite {% if inv.from_user == user %}mine{% endif %}">
+                <div class="invite-title">{% icon 'users' 18 %} Запрошення в групу</div>
+                <div class="invite-group">«{{ inv.group.name }}»</div>
+
+                {% if inv.status == 'pending' %}
+                    {% if inv.to_user == user %}
+                        <div class="invite-actions">
+                            <form action="{% url 'social:invite_respond' inv.id %}" method="post">
+                                {% csrf_token %}
+                                <button name="answer" value="yes" class="mini-btn ok">Так</button>
+                                <button name="answer" value="no" class="mini-btn">Ні</button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <div class="muted">Очікує відповіді</div>
+                    {% endif %}
+                {% elif inv.status == 'accepted' %}
+                    <div class="invite-ok">{% icon 'check' 16 %} Прийнято</div>
+                {% else %}
+                    <div class="muted">{% icon 'x' 16 %} Відхилено</div>
+                {% endif %}
+                <div class="msg-time">{{ inv.created_at|date:"d.m H:i" }}</div>
+            </div>
+            {% endwith %}
+        {% endif %}
+    {% endfor %}
+</div>
+
+<form method="post" class="chat-input">
+    {% csrf_token %}
+    <input type="text" name="text" placeholder="Повідомлення для {{ other.username }}" autocomplete="off" required autofocus>
+    <button type="submit" title="Надіслати">{% icon 'send' %}</button>
+</form>
+{% endblock %}

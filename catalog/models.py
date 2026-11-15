@@ -36,6 +36,9 @@ class Product(models.Model):
     )
 
     cover = models.ImageField('Обкладинка', upload_to='covers/', blank=True)
+    # широка картинка для великого банера на сторінці "Цікавинки"
+    banner = models.ImageField('Банер (широкий)', upload_to='banners/', blank=True)
+    is_featured = models.BooleanField('Показувати в банері на головній', default=False)
     release_date = models.DateField('Дата виходу', null=True, blank=True)
     is_active = models.BooleanField('Показувати на сайті', default=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load icons %}
+
+{% block title %}Цікавинки{% endblock %}
+
+{% block content %}
+
+{% if featured %}
+<!-- великий банер + список справа, як на головній в епіку -->
+<div class="hero">
+    <div class="hero-main">
+        {% for product in featured %}
+            <div class="hero-slide {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}">
+                {% if product.banner %}
+                    <img src="{{ product.banner.url }}" alt="" class="hero-bg">
+                {% elif product.cover %}
+                    <img src="{{ product.cover.url }}" alt="" class="hero-bg">
+                {% endif %}
+                <div class="hero-shade"></div>
+                <div class="hero-text">
+                    <div class="hero-label">{{ product.category.name|default:"Гра" }}</div>
+                    <h2>{{ product.title }}</h2>
+                    {% if product.description %}<p>{{ product.description|truncatewords:22 }}</p>{% endif %}
+                    <div class="hero-price">
+                        {% if product.is_free %}
+                            Безкоштовно
+                        {% elif product.has_discount %}
+                            <span class="badge">-{{ product.discount_percent }}%</span>
+                            <span class="old-price">{{ product.price }} USD</span>
+                            {{ product.discount_price }} USD
+                        {% else %}
+                            {{ product.price }} USD
+                        {% endif %}
+                    </div>
+                    <a href="{{ product.get_absolute_url }}" class="hero-btn">
+                        {% if product.is_free %}Грати{% else %}Купити зараз{% endif %}
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="hero-list">
+        {% for product in featured %}
+            <div class="hero-list-item {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}">
+                {% if product.cover %}
+                    <img src="{{ product.cover.url }}" alt="">
+                {% else %}
+                    <div class="recent-noimg"></div>
+                {% endif %}
+                <span>{{ product.title }}</span>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- три колонки як в епіку: знижки / безкоштовні / нові -->
+<div class="columns">
+    <div class="column">
+        <h3>{% icon 'tag' %} Знижки</h3>
+        {% for product in discounts %}
+            <a href="{{ product.get_absolute_url }}" class="row-item">
+                {% if product.cover %}<img src="{{ product.cover.url }}" alt="">{% else %}<div class="recent-noimg"></div>{% endif %}
+                <div>
+                    <div class="row-title">{{ product.title }}</div>
+                    <span class="badge">-{{ product.discount_percent }}%</span>
+                    <span class="old-price">{{ product.price }}</span>
+                    {{ product.discount_price }} USD
+                </div>
+            </a>
+        {% empty %}
+            <p class="muted">Поки знижок немає</p>
+        {% endfor %}
+    </div>
+
+    <div class="column">
+        <h3>{% icon 'gift' %} Безкоштовні</h3>
+        {% for product in free_games %}
+            <a href="{{ product.get_absolute_url }}" class="row-item">
+                {% if product.cover %}<img src="{{ product.cover.url }}" alt="">{% else %}<div class="recent-noimg"></div>{% endif %}
+                <div>
+                    <div class="row-title">{{ product.title }}</div>
+                    Безкоштовно
+                </div>
+            </a>
+        {% empty %}
+            <p class="muted">Безкоштовних ігор поки немає</p>
+        {% endfor %}
+    </div>
+
+    <div class="column">
+        <h3>{% icon 'sparkle' %} Нові релізи</h3>
+        {% for product in new_releases %}
+            <a href="{{ product.get_absolute_url }}" class="row-item">
+                {% if product.cover %}<img src="{{ product.cover.url }}" alt="">{% else %}<div class="recent-noimg"></div>{% endif %}
+                <div>
+                    <div class="row-title">{{ product.title }}</div>
+                    <span class="muted">{{ product.release_date|date:"d.m.Y" }}</span>
+                </div>
+            </a>
+        {% empty %}
+            <p class="muted">Немає ігор з датою виходу</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% if latest_news %}
+<div class="section-head">
+    <h3>Новини</h3>
+    <a href="{% url 'news:news_list' %}" class="link">Усі новини {% icon 'arrow-right' 16 %}</a>
+</div>
+<div class="news-grid">
+    {% for item in latest_news %}
+        {% include 'news/_news_card.html' %}
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="section-head">
+    <h3>Переглянути все</h3>
+    <a href="{% url 'catalog:product_list' %}" class="link">Всеогляд {% icon 'arrow-right' 16 %}</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // перемикання банера: клік по грі справа або автоматично кожні 6 секунд
+    const slides = document.querySelectorAll('.hero-slide');
+    const listItems = document.querySelectorAll('.hero-list-item');
+    let current = 0;
+
+    function showSlide(i) {
+        slides.forEach(s => s.classList.remove('active'));
+        listItems.forEach(s => s.classList.remove('active'));
+        slides[i].classList.add('active');
+        listItems[i].classList.add('active');
+        current = i;
+    }
+
+    listItems.forEach(item => {
+        item.addEventListener('click', () => showSlide(Number(item.dataset.index)));
+    });
+
+    if (slides.length > 1) {
+        setInterval(() => showSlide((current + 1) % slides.length), 6000);
+    }
+</script>
+{% endblock %}

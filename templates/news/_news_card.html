@@ -1,0 +1,16 @@
+{% load icons %}
+<a href="{{ item.get_absolute_url }}" class="news-card">
+    <div class="news-img">
+        {% if item.image %}
+            <img src="{{ item.image.url }}" alt="">
+        {% elif item.product.cover %}
+            <img src="{{ item.product.cover.url }}" alt="">
+        {% else %}
+            <div class="no-img">{% icon 'news' 40 %}</div>
+        {% endif %}
+    </div>
+    <div class="muted news-date">{{ item.created_at|date:"d.m.Y" }}</div>
+    <div class="card-title">{{ item.title }}</div>
+    <p class="muted">{{ item.short_text|default:item.text|truncatewords:20 }}</p>
+    <span class="link">Докладніше {% icon 'arrow-right' 16 %}</span>
+</a>

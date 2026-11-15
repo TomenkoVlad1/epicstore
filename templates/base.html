@@ -1,4 +1,4 @@
-{% load static %}
+{% load static icons %}
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -8,38 +8,113 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
+{% with app=request.resolver_match.app_name page=request.resolver_match.url_name %}
 
 <aside class="sidebar">
-    <a href="{% url 'catalog:product_list' %}" class="logo">EPIC<br><span>STORE</span></a>
+    <a href="{% url 'catalog:home' %}" class="logo">EPIC<br><span>STORE</span></a>
 
     <nav class="menu">
-        <a href="{% url 'catalog:product_list' %}" class="menu-item active">🛍 Крамниця</a>
-        <a href="#" class="menu-item">📚 Бібліотека</a>
+        <a href="{% url 'catalog:home' %}"
+           class="menu-item {% if app == 'catalog' or app == 'cart' or app == 'news' %}active{% endif %}">{% icon 'store' 22 %} Крамниця</a>
+        <a href="{% url 'library:library' %}"
+           class="menu-item {% if app == 'library' %}active{% endif %}">{% icon 'library' 22 %} Бібліотека</a>
     </nav>
+
+    {% if recently_viewed %}
+    <div class="recent">
+        <div class="recent-title">Нещодавно переглянуті</div>
+        {% for item in recently_viewed %}
+            <a href="{{ item.get_absolute_url }}" class="recent-item">
+                {% if item.cover %}
+                    <img src="{{ item.cover.url }}" alt="">
+                {% else %}
+                    <div class="recent-noimg"></div>
+                {% endif %}
+                <span>{{ item.title }}</span>
+            </a>
+        {% endfor %}
+    </div>
+    {% endif %}
 </aside>
 
 <div class="main">
     <header class="topbar">
-        <form action="{% url 'catalog:product_list' %}" method="get" class="search">
-            <input type="text" name="q" placeholder="Шукати в крамниці" value="{{ query|default:'' }}">
-        </form>
+        {% block topbar_nav %}
+            <form action="{% url 'catalog:product_list' %}" method="get" class="search">
+                {% icon 'search' 18 'search-icon' %}
+                <input type="text" name="q" placeholder="Шукати в крамниці" value="{{ query|default:'' }}">
+            </form>
 
-        <div class="top-links">
-            <a href="{% url 'catalog:product_list' %}">Цікавинки</a>
-            <a href="{% url 'catalog:product_list' %}">Всеогляд</a>
-            <a href="#">Новини</a>
-        </div>
+            <div class="top-links">
+                <a href="{% url 'catalog:home' %}" class="{% if page == 'home' %}active{% endif %}">Цікавинки</a>
+                <a href="{% url 'catalog:product_list' %}" class="{% if page == 'product_list' %}active{% endif %}">Всеогляд</a>
+                <a href="{% url 'news:news_list' %}" class="{% if app == 'news' %}active{% endif %}">Новини</a>
+            </div>
+        {% endblock %}
 
         <div class="top-right">
-            <a href="#" class="icon">🛒</a>
-            <a href="{% url 'admin:index' %}" class="avatar">A</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'users:balance' %}" class="balance-pill" title="Поповнити баланс">
+                    {% icon 'wallet' %} {{ user.profile.balance }} USD
+                </a>
+            {% endif %}
+
+            <a href="{% url 'cart:cart_detail' %}" class="icon cart-icon">
+                {% icon 'cart' 24 %}
+                {% if cart|length %}<span class="cart-count">{{ cart|length }}</span>{% endif %}
+            </a>
+
+            {% if user.is_authenticated %}
+                <a href="{% url 'users:profile' %}" class="avatar" title="{{ user.username }}">
+                    {% if user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" alt="">
+                    {% else %}
+                        {{ user.username|first|upper }}
+                    {% endif %}
+                </a>
+                <!-- в django 5+ вихід тільки через POST -->
+                <form action="{% url 'users:logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="link-btn" title="Вийти">{% icon 'logout' %}</button>
+                </form>
+            {% else %}
+                <a href="{% url 'users:login' %}" class="top-btn">Увійти</a>
+                <a href="{% url 'users:register' %}" class="top-btn primary">Реєстрація</a>
+            {% endif %}
         </div>
     </header>
+
+    <nav class="breadcrumbs">
+        {% block breadcrumbs %}{% endblock %}
+    </nav>
+
 
     <main class="content">
         {% block content %}{% endblock %}
     </main>
 </div>
 
+{% endwith %}
+
+<!-- Django messages - спливають справа вгорі і зникають самі -->
+{% if messages %}
+<div class="toasts">
+    {% for message in messages %}
+        <div class="toast {{ message.tags }}">
+            {% if message.level_tag == 'success' %}{% icon 'check-circle' %}
+            {% elif message.level_tag == 'error' or message.level_tag == 'warning' %}{% icon 'alert' %}
+            {% else %}{% icon 'check' %}{% endif %}
+            <span>{{ message }}</span>
+            <button type="button" class="toast-close" onclick="this.parentElement.remove()">{% icon 'x' 16 %}</button>
+        </div>
+    {% endfor %}
+</div>
+<script>
+    setTimeout(() => document.querySelectorAll('.toast').forEach(t => t.classList.add('hide')), 5000);
+    setTimeout(() => document.querySelectorAll('.toast').forEach(t => t.remove()), 5600);
+</script>
+{% endif %}
+
+{% block scripts %}{% endblock %}
 </body>
 </html>

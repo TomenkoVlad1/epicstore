@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Сторінку не знайдено{% endblock %}
+
+{% block content %}
+<div class="empty">
+    <div class="empty-icon">404</div>
+    <h2>Сторінку не знайдено</h2>
+    <p class="muted">Можливо, її видалили або посилання неправильне</p>
+    <a href="{% url 'catalog:home' %}" class="btn-buy small">На головну</a>
+</div>
+{% endblock %}

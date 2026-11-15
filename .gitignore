@@ -5,3 +5,8 @@ db.sqlite3
 media/*
 !media/.gitkeep
 .idea/
+
+# секрети і зібрана статика
+.env
+staticfiles/
+data/

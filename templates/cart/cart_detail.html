@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Мій кошик{% endblock %}
+
+{% block breadcrumbs %}
+    <a href="{% url 'catalog:home' %}">Крамниця</a>
+    <span>›</span> <span class="current">Кошик</span>
+{% endblock %}
+
+{% block content %}
+<div class="page-head">
+    <h1 class="page-title">Мій кошик</h1>
+    {% if user.is_authenticated %}
+        <a href="{% url 'users:balance' %}" class="head-pill">
+            Баланс облікового запису <b>{{ user.profile.balance }} USD</b>
+        </a>
+    {% endif %}
+</div>
+
+{% if products %}
+<div class="cart">
+    <div class="cart-items">
+        {% for product in products %}
+            <div class="cart-item">
+                <a href="{{ product.get_absolute_url }}">
+                    {% if product.cover %}
+                        <img src="{{ product.cover.url }}" alt="">
+                    {% else %}
+                        <div class="recent-noimg big"></div>
+                    {% endif %}
+                </a>
+                <div class="cart-item-info">
+                    <a href="{{ product.get_absolute_url }}" class="card-title">{{ product.title }}</a>
+                    {% if product.category %}<div class="muted">{{ product.category.name }}</div>{% endif %}
+                </div>
+                <div class="cart-item-price">
+                    {% if product.is_free %}
+                        Безкоштовно
+                    {% elif product.has_discount %}
+                        <span class="badge">-{{ product.discount_percent }}%</span>
+                        <span class="old-price">{{ product.price }}</span>
+                        {{ product.discount_price }} USD
+                    {% else %}
+                        {{ product.price }} USD
+                    {% endif %}
+                    <form action="{% url 'cart:cart_remove' product.id %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="link-btn">Видалити</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="cart-summary">
+        <div class="filters-title">Підсумок</div>
+        <div class="summary-row"><span>Ігор</span><span>{{ products|length }}</span></div>
+        <div class="summary-row total"><span>Разом</span><span>{{ total }} USD</span></div>
+
+        {% if user.is_authenticated %}
+            <form action="{% url 'cart:checkout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn-buy">
+                    {% if total == 0 %}Отримати{% else %}Оформити{% endif %}
+                </button>
+            </form>
+        {% else %}
+            <a href="{% url 'users:login' %}?next={% url 'cart:cart_detail' %}" class="btn-buy">Увійдіть, щоб оформити</a>
+        {% endif %}
+
+        <form action="{% url 'cart:cart_clear' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn-cart">Очистити кошик</button>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="empty">
+    <div class="empty-icon">˃﹏˂</div>
+    <h2>Ваш кошик порожній</h2>
+    <a href="{% url 'catalog:product_list' %}" class="btn-buy small">Купуйте ігри й застосунки</a>
+</div>
+{% endif %}
+{% endblock %}

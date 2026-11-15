@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Вхід{% endblock %}
+
+{% block breadcrumbs %}
+    <a href="{% url 'catalog:home' %}">Крамниця</a>
+    <span>›</span> <span class="current">Вхід</span>
+{% endblock %}
+
+{% block content %}
+<div class="auth-box">
+    <h1>Увійти</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+            <div class="message error">Неправильний логін або пароль</div>
+        {% endif %}
+
+        <label>Ім'я користувача</label>
+        {{ form.username }}
+
+        <label>Пароль</label>
+        {{ form.password }}
+
+        <input type="hidden" name="next" value="{{ request.GET.next }}">
+        <button type="submit" class="btn-buy">Увійти</button>
+    </form>
+
+    <p class="muted">Немає акаунта? <a href="{% url 'users:register' %}" class="link">Зареєструватися</a></p>
+</div>
+{% endblock %}

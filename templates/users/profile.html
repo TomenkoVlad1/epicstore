@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load icons %}
+
+{% block title %}Профіль{% endblock %}
+
+{# на сторінці профілю прибираємо пошук і Цікавинки/Всеогляд/Новини #}
+{% block topbar_nav %}{% endblock %}
+
+{% block breadcrumbs %}
+    <a href="{% url 'catalog:home' %}">Крамниця</a>
+    <span>›</span> <span class="current">Профіль</span>
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+
+    <div class="profile">
+        <div class="profile-avatar">
+            {% if profile.avatar %}
+                <img src="{{ profile.avatar.url }}" alt="">
+            {% else %}
+                {{ user.username|first|upper }}
+            {% endif %}
+        </div>
+
+        <div class="profile-info">
+            <h1>{{ user.username }}</h1>
+            {% if user.first_name or user.last_name %}
+                <p>{{ user.first_name }} {{ user.last_name }}</p>
+            {% endif %}
+            <p class="muted">{{ user.email }}</p>
+
+            <table class="info">
+                <tr><td>Країна</td><td>{{ profile.country|default:"—" }}</td></tr>
+                <tr><td>Дата народження</td><td>{{ profile.birth_date|date:"d.m.Y"|default:"—" }}</td></tr>
+                <tr><td>З нами з</td><td>{{ user.date_joined|date:"d.m.Y" }}</td></tr>
+                <tr><td>Баланс</td><td><a href="{% url 'users:balance' %}" class="link">{{ profile.balance }} USD</a></td></tr>
+                <tr><td>Ігор у бібліотеці</td><td><a href="{% url 'library:library' %}" class="link">{{ games_count }}</a></td></tr>
+                <tr><td>Друзів</td><td>{{ friends|length }}</td></tr>
+            </table>
+
+            {% if profile.bio %}
+                <div class="description">{{ profile.bio|linebreaks }}</div>
+            {% endif %}
+
+            <a href="{% url 'users:profile_edit' %}" class="btn-buy small">Редагувати профіль</a>
+        </div>
+    </div>
+
+    <!-- панель Social як в епіку -->
+    <div class="social-panel">
+        <div class="social-tabs">
+            <span class="social-tab active" title="Друзі">{% icon 'users' 22 %}</span>
+            <a href="{% url 'social:chats' %}" class="social-tab" title="Чати">
+                {% icon 'chat' 22 %} {% if unread_total %}<span class="cart-count">{{ unread_total }}</span>{% endif %}
+            </a>
+        </div>
+
+        <h2>Social</h2>
+
+        <!-- наш акаунт -->
+        <div class="friend me">
+            <div class="mini-avatar">
+                {% if profile.avatar %}<img src="{{ profile.avatar.url }}" alt="">{% else %}{{ user.username|first|upper }}{% endif %}
+                <span class="dot online"></span>
+            </div>
+            <div>
+                <div class="friend-name">{{ user.username }}</div>
+                <div class="friend-status">Online</div>
+            </div>
+        </div>
+
+        <a href="{% url 'social:group_create' %}" class="social-btn">{% icon 'plus' 18 %} Створити групу</a>
+
+        <div class="social-head">
+            <h3>Friends</h3>
+        </div>
+
+        <form action="{% url 'social:friend_add' %}" method="post" class="add-friend">
+            {% csrf_token %}
+            <input type="text" name="username" placeholder="Нік друга" required>
+            <button type="submit" title="Додати в друзі">{% icon 'user-plus' %}</button>
+        </form>
+
+        {% if incoming %}
+            <div class="requests-title">Заявки в друзі ({{ incoming|length }})</div>
+            {% for req in incoming %}
+                <div class="friend">
+                    <div class="mini-avatar">{{ req.from_user.username|first|upper }}</div>
+                    <div class="friend-name">{{ req.from_user.username }}</div>
+                    <form action="{% url 'social:friend_accept' req.id %}" method="post">
+                        {% csrf_token %}<button class="mini-btn ok" title="Прийняти">{% icon 'check' 16 %}</button>
+                    </form>
+                    <form action="{% url 'social:friend_decline' req.id %}" method="post">
+                        {% csrf_token %}<button class="mini-btn" title="Відхилити">{% icon 'x' 16 %}</button>
+                    </form>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if outgoing %}
+            <div class="requests-title">Надіслані заявки</div>
+            {% for req in outgoing %}
+                <div class="friend">
+                    <div class="mini-avatar">{{ req.to_user.username|first|upper }}</div>
+                    <div>
+                        <div class="friend-name">{{ req.to_user.username }}</div>
+                        <div class="friend-status">Очікує відповіді</div>
+                    </div>
+                    <form action="{% url 'social:friend_decline' req.id %}" method="post">
+                        {% csrf_token %}<button class="mini-btn" title="Скасувати">{% icon 'x' 16 %}</button>
+                    </form>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% for f in friends %}
+            <div class="friend">
+                <div class="mini-avatar">
+                    {% if f.user.profile.avatar %}<img src="{{ f.user.profile.avatar.url }}" alt="">{% else %}{{ f.user.username|first|upper }}{% endif %}
+                    <span class="dot {% if f.user.profile.is_online %}online{% endif %}"></span>
+                </div>
+                <div>
+                    <div class="friend-name">{{ f.user.username }}</div>
+                    <div class="friend-status">{% if f.user.profile.is_online %}Online{% else %}Offline{% endif %}</div>
+                </div>
+                <a href="{% url 'social:dm' f.user.username %}" class="mini-btn" title="Написати">
+                    {% icon 'chat' 16 %}{% if f.unread %}<span class="cart-count">{{ f.unread }}</span>{% endif %}
+                </a>
+                <form action="{% url 'social:friend_remove' f.user.username %}" method="post"
+                      onsubmit="return confirm('Видалити {{ f.user.username }} з друзів?')">
+                    {% csrf_token %}<button class="mini-btn" title="Видалити з друзів">{% icon 'trash' 16 %}</button>
+                </form>
+            </div>
+        {% empty %}
+            <p class="muted">Поки немає друзів. Введіть нік вище, щоб надіслати заявку.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

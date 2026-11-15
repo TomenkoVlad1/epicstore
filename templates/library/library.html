@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load icons %}
+
+{% block title %}Бібліотека{% endblock %}
+
+{% block breadcrumbs %}
+    <a href="{% url 'catalog:home' %}">Крамниця</a>
+    <span>›</span> <span class="current">Бібліотека</span>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Бібліотека</h1>
+
+<!-- вкладки: Усі / Улюблені / свої колекції / + -->
+<div class="tabs">
+    <a href="?tab=all" class="tab {% if tab == 'all' %}active{% endif %}">Усі</a>
+    <a href="?tab=fav" class="tab {% if tab == 'fav' %}active{% endif %}">Улюблені</a>
+    {% for c in collections %}
+        <a href="?tab={{ c.id }}" class="tab {% if current_collection == c %}active{% endif %}">{{ c.name }}</a>
+    {% endfor %}
+
+    <details class="add-collection">
+        <summary title="Створити колекцію">{% icon 'plus-circle' 28 %}</summary>
+        <form action="{% url 'library:collection_create' %}" method="post" class="dropdown">
+            {% csrf_token %}
+            <input type="text" name="name" placeholder="Назва колекції" maxlength="50" required>
+            <button type="submit" class="btn-buy">Створити</button>
+        </form>
+    </details>
+</div>
+
+<div class="catalog">
+    <div class="catalog-main">
+        <form method="get" class="sort-line">
+            <input type="hidden" name="tab" value="{{ tab }}">
+            <input type="hidden" name="q" value="{{ q }}">
+            <input type="hidden" name="category" value="{{ category }}">
+            <span class="muted">Сортувати:</span>
+            <select name="sort" onchange="this.form.submit()">
+                {% for key, option in sort_options.items %}
+                    <option value="{{ key }}" {% if key == sort %}selected{% endif %}>{{ option.0 }}</option>
+                {% endfor %}
+            </select>
+
+            {% if current_collection %}
+                <button type="submit" form="deleteCollection" class="link-btn danger">Видалити колекцію «{{ current_collection.name }}»</button>
+            {% endif %}
+        </form>
+        {% if current_collection %}
+            <form id="deleteCollection" action="{% url 'library:collection_delete' current_collection.id %}" method="post">
+                {% csrf_token %}
+            </form>
+        {% endif %}
+
+        <div class="grid">
+            {% for item in items %}
+                <div class="card lib-card">
+                    <a href="{{ item.product.get_absolute_url }}" class="card-img">
+                        {% if item.product.cover %}
+                            <img src="{{ item.product.cover.url }}" alt="">
+                        {% else %}
+                            <div class="no-img">Немає фото</div>
+                        {% endif %}
+                        {% if item.is_favorite %}<span class="fav-mark">{% icon 'heart-fill' 16 %}</span>{% endif %}
+                    </a>
+
+                    <div class="lib-card-head">
+                        <div class="card-title">{{ item.product.title }}</div>
+
+                        <!-- меню "..." -->
+                        <details class="dots">
+                            <summary>{% icon 'more' 22 %}</summary>
+                            <div class="dropdown">
+                                <form action="{% url 'library:toggle_favorite' item.id %}" method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <button type="submit">
+                                        {% if item.is_favorite %}{% icon 'heart-fill' 16 %} Прибрати з улюблених{% else %}{% icon 'heart' 16 %} Додати в улюблені{% endif %}
+                                    </button>
+                                </form>
+
+                                {% for c in collections %}
+                                    <form action="{% url 'library:collection_toggle' c.id item.id %}" method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <button type="submit">
+                                            {% if c in item.collections.all %}{% icon 'check' 16 %}{% else %}{% icon 'plus' 16 %}{% endif %} {{ c.name }}
+                                        </button>
+                                    </form>
+                                {% endfor %}
+
+                                <a href="{{ item.product.get_absolute_url }}">{% icon 'store' 16 %} Сторінка в крамниці</a>
+                            </div>
+                        </details>
+                    </div>
+                    <div class="muted play">{% icon 'play' 14 %} Запуск</div>
+                </div>
+            {% empty %}
+                <p class="muted">
+                    {% if tab == 'all' and not q %}
+                        У бібліотеці поки немає ігор. <a href="{% url 'catalog:product_list' %}" class="link">Перейти до крамниці</a>
+                    {% else %}
+                        Тут поки порожньо
+                    {% endif %}
+                </p>
+            {% endfor %}
+        </div>
+
+        <p class="muted">Показано {{ items|length }}</p>
+    </div>
+
+    <form method="get" class="filters">
+        <div class="filters-title">Фільтри</div>
+        <input type="hidden" name="tab" value="{{ tab }}">
+        <input type="hidden" name="sort" value="{{ sort }}">
+
+        <input type="text" name="q" placeholder="Назва" value="{{ q }}">
+
+        <label>Жанр</label>
+        <select name="category">
+            <option value="">Усі</option>
+            {% for cat in categories %}
+                <option value="{{ cat.slug }}" {% if cat.slug == category %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn-buy">Застосувати</button>
+        <a href="?tab={{ tab }}" class="reset">Скинути</a>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'social/chat_base.html' %}
+{% load icons %}
+
+{% block title %}{{ group.name }}{% endblock %}
+{% block chat_crumb %}<span>›</span> <span class="current">{{ group.name }}</span>{% endblock %}
+
+{% block chat_main %}
+<div class="chat-header">
+    <div class="mini-avatar group">{{ group.name|first|upper }}</div>
+    <div>
+        <div class="friend-name">{{ group.name }}</div>
+        <div class="friend-status">
+            {% for m in members %}{{ m.username }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        </div>
+    </div>
+
+    <div class="chat-header-actions">
+        {% if can_invite %}
+        <details class="dots">
+            <summary class="mini-btn" title="Запросити друзів">{% icon 'user-plus' %}</summary>
+            <form action="{% url 'social:group_invite' group.id %}" method="post" class="dropdown">
+                {% csrf_token %}
+                <div class="dropdown-title">Запросити друзів</div>
+                {% for f in can_invite %}
+                    <label class="check"><input type="checkbox" name="friends" value="{{ f.id }}"> {{ f.username }}</label>
+                {% endfor %}
+                <button type="submit" class="btn-buy">Надіслати запрошення</button>
+            </form>
+        </details>
+        {% endif %}
+
+        <form action="{% url 'social:group_leave' group.id %}" method="post"
+              onsubmit="return confirm('Вийти з групи?')">
+            {% csrf_token %}
+            <button type="submit" class="mini-btn" title="Вийти з групи">{% icon 'logout' %}</button>
+        </form>
+    </div>
+</div>
+
+<div class="chat-messages">
+    <p class="chat-start">Групу створив {{ group.owner.username }} · {{ group.created_at|date:"d.m.Y" }}</p>
+
+    {% for m in group_messages %}
+        <div class="msg {% if m.sender == user %}mine{% endif %}">
+            {% if m.sender != user %}<div class="msg-author">{{ m.sender.username }}</div>{% endif %}
+            <div class="msg-text">{{ m.text|linebreaksbr }}</div>
+            <div class="msg-time">{{ m.created_at|date:"d.m H:i" }}</div>
+        </div>
+    {% endfor %}
+</div>
+
+<form method="post" class="chat-input">
+    {% csrf_token %}
+    <input type="text" name="text" placeholder="Повідомлення в «{{ group.name }}»" autocomplete="off" required autofocus>
+    <button type="submit" title="Надіслати">{% icon 'send' %}</button>
+</form>
+{% endblock %}

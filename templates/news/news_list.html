@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load icons %}
+
+{% block title %}Новини{% endblock %}
+
+{% block breadcrumbs %}
+    <a href="{% url 'catalog:home' %}">Крамниця</a>
+    <span>›</span> <span class="current">Новини</span>
+{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Новини</h1>
+
+<div class="news-grid">
+    {% for item in news_list %}
+        {% include 'news/_news_card.html' %}
+    {% empty %}
+        <p class="muted">Новин поки немає. Додайте їх в адмінці.</p>
+    {% endfor %}
+</div>
+{% endblock %}

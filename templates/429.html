@@ -1,0 +1,18 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Забагато запитів</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="error-page">
+    {# окрема легка сторінка без запитів до бази - віддається коли спрацював rate limit #}
+    <div class="empty">
+        <div class="empty-icon">429</div>
+        <h2>Забагато запитів</h2>
+        <p class="muted">Ви робите це занадто часто. Зачекайте хвилинку і спробуйте знову.</p>
+        <a href="/" class="btn-buy small">На головну</a>
+    </div>
+</body>
+</html>

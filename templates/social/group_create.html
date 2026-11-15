@@ -1,0 +1,30 @@
+{% extends 'social/chat_base.html' %}
+
+{% block title %}Нова група{% endblock %}
+{% block chat_crumb %}<span>›</span> <span class="current">Нова група</span>{% endblock %}
+
+{% block chat_main %}
+<div class="chat-form">
+    <h2>Створити групу</h2>
+    <p class="muted">Друзям прийде запрошення в особисті повідомлення. Якщо вони натиснуть «Так» — потраплять у групу.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <label>Назва групи</label>
+        <input type="text" name="name" maxlength="100" required placeholder="Наприклад: Fortnite squad">
+
+        <label>Кого запросити</label>
+        {% for f in friends %}
+            <label class="check">
+                <input type="checkbox" name="friends" value="{{ f.id }}">
+                <span class="mini-avatar small">{{ f.username|first|upper }}</span>
+                {{ f.username }}
+            </label>
+        {% empty %}
+            <p class="muted">У вас поки немає друзів — групу можна створити і запросити їх пізніше.</p>
+        {% endfor %}
+
+        <button type="submit" class="btn-buy">Створити</button>
+    </form>
+</div>
+{% endblock %}

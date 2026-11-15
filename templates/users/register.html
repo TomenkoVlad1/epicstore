@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Реєстрація{% endblock %}
+
+{% block breadcrumbs %}
+    <a href="{% url 'catalog:home' %}">Крамниця</a>
+    <span>›</span> <span class="current">Реєстрація</span>
+{% endblock %}
+
+{% block content %}
+<div class="auth-box">
+    <h1>Реєстрація</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <label>{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}
+                <div class="field-error">{{ error }}</div>
+            {% endfor %}
+        {% endfor %}
+
+        <button type="submit" class="btn-buy">Створити акаунт</button>
+    </form>
+
+    <p class="muted">Вже є акаунт? <a href="{% url 'users:login' %}" class="link">Увійти</a></p>
+</div>
+{% endblock %}
